@@ -1,0 +1,4 @@
+- name: Install HAproxy, Grafana, Prometheus wit role
+  hosts: myhosts
+  roles: 
+    - sou_podman

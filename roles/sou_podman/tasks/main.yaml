@@ -1,0 +1,98 @@
+---
+- name: Create base directory
+  ansible.builtin.file:
+    path: containers_vols
+    state: directory
+    mode: '0755'
+
+- name: Create HAProxy directory structure
+  ansible.builtin.file:
+    path: containers_vols/haproxy/cert
+    state: directory
+    mode: '0755'
+
+- name: Copy HAProxy certificate
+  ansible.builtin.copy:
+    src: haproxy_cert.pem
+    dest: containers_vols/haproxy/cert/haproxy_cert.pem
+    mode: '0644'
+
+- name: Create Prometheus directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - containers_vols/prometheus/data
+    - containers_vols/prometheus/config
+
+- name: Create grafana directory structure
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:   
+    - containers_vols/grafana/data
+    - containers_vols/grafana/config
+
+- name: Generate HAProxy configuration from template
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: containers_vols/haproxy/haproxy.cfg
+    mode: '0644'
+
+- name: Generate Prometheus configuration from template
+  ansible.builtin.template:
+    src: prometheus.yml.j2
+    dest: containers_vols/prometheus/config/prometheus.yml
+    mode: '0644'
+
+- name: Generate Grafana configuration from template
+  ansible.builtin.template:
+    src: grafana.ini.j2
+    dest: containers_vols/grafana/config/grafana.ini
+    mode: '0644'
+
+- name: create Podman network
+  containers.podman.podman_network:
+    name: test_network
+    driver: bridge
+    state: present
+
+- name: Install prometheus
+  containers.podman.podman_container:
+    name: prometheus
+    image: docker.io/prom/prometheus:latest
+    network: test_network
+    state: started
+    volumes:
+      - "{{  playbook_dir }}/containers_vols/prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml:Z"
+      - "{{  playbook_dir }}/containers_vols/prometheus/data:/prometheus:Z"
+    expose: 9090
+    ports: "9090:9090"
+
+- name: Install grafana
+  containers.podman.podman_container:
+    name: grafana
+    image: docker.io/grafana/grafana
+    network: test_network
+    state: started
+    volumes:
+      - "{{  playbook_dir }}/containers_vols/grafana/config/grafana.ini:/etc/grafana/grafana.ini:Z"
+      - "{{  playbook_dir }}/containers_vols/grafana/data:/grafana:Z"
+    ports: "3000:3000"
+
+- name: install Haproxy
+  containers.podman.podman_container:
+    name: haproxy
+    image: docker.io/library/haproxy:latest
+    network: test_network
+    state: started
+    ports:
+      - "1936:1936"
+      - "8080:8080"
+      - "8443:8443"
+      - "8404:8404"
+    volumes:
+      - "{{ playbook_dir }}/containers_vols/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:Z"
+      - "{{ playbook_dir }}/containers_vols/haproxy/cert/haproxy_cert.pem:/usr/local/etc/haproxy/certs/haproxy_cert.pem:Z"
