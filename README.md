@@ -13,8 +13,8 @@ NOTA: allo stato attuale è tutto hardcoded
 
 Per far partire ansible e permettergli di creare quanto scritto nei file si utilizza il comando
 
-'''bash
+```bash
 ansible-playbook -i inventory.ini playbook.yaml
-'''  
+```  
 
 inventory.ini contiene l'indirizzo degli host sui quali verranno eseguiti i ruoli, il playbook.yml è invece il file che fa partire l'automazione
