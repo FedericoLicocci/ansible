@@ -13,7 +13,7 @@ NOTA: allo stato attuale è tutto hardcoded
 
 Per far partire ansible e permettergli di creare quanto scritto nei file si utilizza il comando
 
-'''
+'''bash
 ansible-playbook -i inventory.ini playbook.yaml
 '''  
 
