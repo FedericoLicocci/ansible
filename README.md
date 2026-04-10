@@ -1,4 +1,4 @@
-#Modulo formativo ansible, podman, git
+# Modulo formativo ansible, podman, git
 
 Obiettivo: automatizzare grazie ad ansible la creazione di tre container: haproxy, grafana, prometheus
 
